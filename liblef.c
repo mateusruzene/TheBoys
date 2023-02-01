@@ -5,8 +5,8 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "liblef.h"
-
 /*
  * Cria uma LEF vazia
  */
@@ -49,11 +49,16 @@ lef_t *destroi_lef(lef_t *l)
 int adiciona_inicio_lef(lef_t *l, evento_t *evento)
 {
     nodo_lef_t *novo;
+    evento_t *eventoCopy;
 
+    if (!(eventoCopy = malloc(sizeof(evento_t))))
+        return 0;
     if (!(novo = malloc(sizeof(nodo_lef_t))))
         return 0;
 
-    novo->evento = evento;
+    memcpy(eventoCopy, evento, sizeof(evento_t));
+
+    novo->evento = eventoCopy;
     novo->prox = l->Primeiro;
     l->Primeiro = novo;
 
@@ -68,13 +73,21 @@ int adiciona_inicio_lef(lef_t *l, evento_t *evento)
 int adiciona_ordem_lef(lef_t *l, evento_t *evento)
 {
     nodo_lef_t *novo, *aux;
+    evento_t *eventoCopy;
 
+    if (!(l->Primeiro))
+        return adiciona_inicio_lef(l, evento);
+
+    if (!(eventoCopy = malloc(sizeof(evento_t))))
+        return 0;
     if (!(novo = malloc(sizeof(nodo_lef_t))))
         return 0;
 
+    memcpy(eventoCopy, evento, sizeof(evento_t));
+
     aux = l->Primeiro;
-    novo->evento = evento;
-    while ((aux->prox) && evento->tempo >= ((aux->prox)->evento)->tempo)
+    novo->evento = eventoCopy;
+    while ((aux->prox) && eventoCopy->tempo >= ((aux->prox)->evento)->tempo)
     {
         aux = aux->prox;
     }

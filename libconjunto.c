@@ -225,7 +225,7 @@ conjunto_t *cria_subcjt_cjt(conjunto_t *c, int n)
         return NULL;
 
     for (i = 0; i < n; i++)
-        cjt->v[i] = c->v[rand() % n];
+        cjt->v[i] = c->v[rand() % 9];
 
     cjt->card = n;
 
