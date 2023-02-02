@@ -3,6 +3,23 @@
 
 #include "libconjunto.h"
 
+int busca_binaria(int vetor[], int esq, int dir, int x)
+{
+    while (esq <= dir)
+    {
+        int m = esq + (dir - esq) / 2;
+
+        if (vetor[m] == x)
+            return m;
+        if (vetor[m] < x)
+            esq = m + 1;
+        else
+            dir = m - 1;
+    }
+
+    return -1;
+}
+
 conjunto_t *cria_cjt(int max)
 {
     conjunto_t *c = malloc(sizeof *c);
@@ -213,20 +230,33 @@ conjunto_t *copia_cjt(conjunto_t *c)
 
 conjunto_t *cria_subcjt_cjt(conjunto_t *c, int n)
 {
-    int i;
+    conjunto_t *cjt;
+    int i, elemento;
+
     if (!c)
         return NULL;
 
     if (n >= c->card)
         return copia_cjt(c);
 
-    conjunto_t *cjt = cria_cjt(n);
+    cjt = cria_cjt(n);
+
     if (!cjt)
         return NULL;
 
     for (i = 0; i < n; i++)
-        cjt->v[i] = c->v[rand() % 9];
-
+    {
+        elemento = rand() % 9;
+        if (i > 0)
+        {
+            if (elemento == busca_binaria(cjt->v, 0, n, elemento))
+                elemento = rand() % 9;
+            else
+                cjt->v[i] = c->v[elemento];
+        }
+        else
+            cjt->v[i] = c->v[elemento];
+    }
     cjt->card = n;
 
     return cjt;

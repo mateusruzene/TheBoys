@@ -155,6 +155,7 @@ void cria_herois(mundo_t *mundo)
   for (i = 0; i <= N_HEROIS - 1; i++)
     mundo->herois[i] = cria_heroi(mundo, i);
 }
+/* Adiciona experiencia aos herois que foram a missao */
 
 /* Retorna os dados do heroi */
 heroi_t *pega_heroi(mundo_t *mundo, int id_heroi)
@@ -162,6 +163,18 @@ heroi_t *pega_heroi(mundo_t *mundo, int id_heroi)
   heroi_t *heroi = (mundo->herois[id_heroi]);
 
   return heroi;
+}
+
+void adiciona_exp_herois(mundo_t *mundo, conjunto_t *local_escolhido)
+{
+  heroi_t *heroi;
+  int i;
+
+  for (i = 0; i < local_escolhido->card; i++)
+  {
+    heroi = pega_heroi(mundo, local_escolhido->v[i]);
+    heroi->experiencia++;
+  }
 }
 /* ------------------- FIM HEROIS ------------------- */
 
@@ -203,7 +216,7 @@ local_t *pega_local(mundo_t *mundo, int id_local)
 conjunto_t *pega_habilidades_local(mundo_t *mundo, local_t *local)
 {
   heroi_t *heroi;
-  conjunto_t *hab_herois;
+  conjunto_t *hab_herois = cria_cjt(N_HABILIDADES);
   int i;
 
   for (i = 0; i < local->herois_local->card; i++)
@@ -271,7 +284,7 @@ void dispara_chegada(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
   heroi_t *heroi = pega_heroi(mundo, evento->dado1);
   local_t *local = pega_local(mundo, evento->dado2);
   int tpl;
-  int decisao = (heroi->paciencia) / (4 - tamanho_fila(local->fila_espera));
+  int decisao = (heroi->paciencia) / 4 - tamanho_fila(local->fila_espera);
   int lotado = cardinalidade_cjt(local->herois_local);
 
   if (lotado == local->lotacao_max)
@@ -341,13 +354,16 @@ void dispara_saida(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
   }
 }
 
-void dispara_missao(mundo_t *mundo, evento_t *evento)
+void dispara_missao(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
 {
   local_t *local;
-  conjunto_t *missao, *hab_herois;
-  int i, hab_missao;
+  conjunto_t *missao, *hab_herois, *local_escolhido, *local_anterior;
+  int i, hab_missao, id_local_escolhido;
 
   hab_herois = cria_cjt(N_HABILIDADES);
+  local_escolhido = cria_cjt(N_HABILIDADES);
+  local_anterior = cria_cjt(N_HABILIDADES);
+
   hab_missao = aleat(3, 6);
   missao = cria_subcjt_cjt(mundo->habilidades_mundo, hab_missao);
 
@@ -357,9 +373,31 @@ void dispara_missao(mundo_t *mundo, evento_t *evento)
   for (i = 0; i < N_LOCAIS; i++)
   {
     local = mundo->locais[i];
+
     printf("%6d:MISSAO %2d HAB_EQL %d:", evento->tempo, evento->dado2, i);
     hab_herois = pega_habilidades_local(mundo, local);
     imprime_cjt(hab_herois);
+
+    if (contido_cjt(missao, hab_herois))
+      if (vazio_cjt(local_escolhido) || cardinalidade_cjt(mundo->locais[i]->herois_local) < cardinalidade_cjt(local_escolhido))
+      {
+        local_anterior = local_escolhido;
+        local_escolhido = copia_cjt(mundo->locais[i]->herois_local);
+        id_local_escolhido = i;
+        local_anterior = destroi_cjt(local_anterior);
+      }
+  }
+
+  if (vazio_cjt(local_escolhido))
+  {
+    cria_eventos(lef_mundo, ID_MISSAO, -1, evento->dado2, aleat(evento->tempo, FIM_DO_MUNDO));
+    printf("%6d:MISSAO %2d IMPOSSIVEL \n", evento->tempo, evento->dado2);
+  }
+  else
+  {
+    printf("%6d:MISSAO %2d HAB_EQS %d :\n", evento->tempo, evento->dado2, id_local_escolhido);
+    imprime_cjt(local_escolhido);
+    adiciona_exp_herois(mundo, local_escolhido);
   }
 }
 
@@ -376,13 +414,13 @@ void dispara_eventos(mundo_t *mundo, lef_t *lef_mundo, evento_t *evento)
     dispara_saida(mundo, evento, lef_mundo);
     break;
   case ID_MISSAO:
-    dispara_missao(mundo, evento);
+    dispara_missao(mundo, evento, lef_mundo);
     break;
   case ID_FIM:
     printf("%6d:FIM DO MUNDO\n", (evento->tempo));
     break;
   default:
-    printf("DEU PROBLEMA \n");
+    printf("ERRO \n");
     break;
   }
 }
@@ -400,7 +438,7 @@ int main()
   cria_locais(mundo);
 
   cria_eventos_iniciais_chegada(lef_mundo);
-  /* cria_eventos_iniciais_missao(lef_mundo); */
+  cria_eventos_iniciais_missao(lef_mundo);
   cria_eventos(lef_mundo, ID_FIM, -1, -1, FIM_DO_MUNDO);
 
   /* nodo_lef_t *aux;
@@ -419,11 +457,11 @@ int main()
   }
 
   /* IMPRIME AS EXPERIENCIAS DOS HEROIS NO FINAL */
-  /* int i;
+  int i;
   for (i = 0; i <= mundo->total_herois - 1; i++)
   {
     printf("HEROI %2d EXPERIENCIA %2d \n", (mundo->herois[i])->id, (mundo->herois[i])->experiencia);
-  } */
+  }
 
   /*  int i;
    for (i = 0; i <= mundo->total_herois - 1; i++)
