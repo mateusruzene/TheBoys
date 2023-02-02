@@ -364,7 +364,7 @@ void dispara_missao(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
   local_escolhido = cria_cjt(N_HABILIDADES);
   local_anterior = cria_cjt(N_HABILIDADES);
 
-  hab_missao = aleat(3, 6);
+  hab_missao = aleat(3, 6 - 3);
   missao = cria_subcjt_cjt(mundo->habilidades_mundo, hab_missao);
 
   printf("%6d:MISSAO %2d HAB_REQ ", evento->tempo, evento->dado2);
@@ -390,12 +390,14 @@ void dispara_missao(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
 
   if (vazio_cjt(local_escolhido))
   {
-    cria_eventos(lef_mundo, ID_MISSAO, -1, evento->dado2, aleat(evento->tempo, FIM_DO_MUNDO));
+    int novo_tempo = aleat(evento->tempo, FIM_DO_MUNDO - evento->tempo);
+
     printf("%6d:MISSAO %2d IMPOSSIVEL \n", evento->tempo, evento->dado2);
+    cria_eventos(lef_mundo, ID_MISSAO, -1, evento->dado2, novo_tempo);
   }
   else
   {
-    printf("%6d:MISSAO %2d HAB_EQS %d :\n", evento->tempo, evento->dado2, id_local_escolhido);
+    printf("%6d:MISSAO %2d HAB_EQS %d: ", evento->tempo, evento->dado2, id_local_escolhido);
     imprime_cjt(local_escolhido);
     adiciona_exp_herois(mundo, local_escolhido);
   }
