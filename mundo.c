@@ -106,28 +106,6 @@ int calcula_tdl(local_t *local, local_t *prox_local, heroi_t *heroi)
 }
 /* ------------------- FIM FUNCOES AUXILIARES ------------------- */
 
-/* ------------------- MUNDO ------------------- */
-mundo_t *cria_mundo()
-{
-  int i;
-  mundo_t *mundo;
-
-  if (!(mundo = malloc(sizeof(mundo_t))))
-    return NULL;
-
-  mundo->tempo_atual = TEMPO_INICIAL;
-  mundo->tamanho_mundo = N_TAMANHO_MUNDO;
-  mundo->total_herois = N_HEROIS;
-  mundo->total_locais = N_LOCAIS;
-  mundo->habilidades_mundo = cria_cjt(N_HABILIDADES);
-
-  for (i = 0; i <= N_HABILIDADES - 1; i++)
-    insere_cjt(mundo->habilidades_mundo, i);
-
-  return mundo;
-}
-/* ------------------- FIM MUNDO ------------------- */
-
 /* ------------------- HEROIS ------------------- */
 /* Cria heroi com dados aleatórios */
 heroi_t *cria_heroi(mundo_t *mundo, int id)
@@ -175,6 +153,12 @@ void adiciona_exp_herois(mundo_t *mundo, conjunto_t *local_escolhido)
     heroi = pega_heroi(mundo, local_escolhido->v[i]);
     heroi->experiencia++;
   }
+}
+
+void destroi_heroi(heroi_t *heroi)
+{
+  heroi->habilidades_heroi = destroi_cjt(heroi->habilidades_heroi);
+  free(heroi);
 }
 /* ------------------- FIM HEROIS ------------------- */
 
@@ -227,7 +211,53 @@ conjunto_t *pega_habilidades_local(mundo_t *mundo, local_t *local)
 
   return hab_herois;
 }
+
+void destroi_local(local_t *local)
+{
+  local->fila_espera = destroi_fila(local->fila_espera);
+  local->herois_local = destroi_cjt(local->herois_local);
+  free(local);
+}
 /* ------------------- FIM LOCAIS ------------------- */
+
+/* ------------------- MUNDO ------------------- */
+mundo_t *cria_mundo()
+{
+  int i;
+  mundo_t *mundo;
+
+  if (!(mundo = malloc(sizeof(mundo_t))))
+    return NULL;
+
+  mundo->tempo_atual = TEMPO_INICIAL;
+  mundo->tamanho_mundo = N_TAMANHO_MUNDO;
+  mundo->total_herois = N_HEROIS;
+  mundo->total_locais = N_LOCAIS;
+  mundo->habilidades_mundo = cria_cjt(N_HABILIDADES);
+
+  for (i = 0; i <= N_HABILIDADES - 1; i++)
+    insere_cjt(mundo->habilidades_mundo, i);
+
+  return mundo;
+}
+
+mundo_t *destroi_mundo(mundo_t *mundo)
+{
+  int i, j;
+
+  for (i = 0; i < N_HEROIS; i++)
+    destroi_heroi(mundo->herois[i]);
+  for (j = 0; j < N_LOCAIS; j++)
+    destroi_local(mundo->locais[j]);
+
+  /* free(mundo->herois);
+  free(mundo->locais); */
+  mundo->habilidades_mundo = destroi_cjt(mundo->habilidades_mundo);
+  free(mundo);
+
+  return mundo;
+}
+/* ------------------- FIM MUNDO ------------------- */
 
 /* ------------------- EVENTOS ------------------- */
 /* Cria eventos de chegada, saida, missão no inicio da fila*/
@@ -401,13 +431,16 @@ void dispara_missao(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
     imprime_cjt(local_escolhido);
     adiciona_exp_herois(mundo, local_escolhido);
   }
+
+  hab_herois = destroi_cjt(hab_herois);
+  local_escolhido = destroi_cjt(local_escolhido);
+  missao = destroi_cjt(missao);
 }
 
 /* Dispara os eventos do mundo */
 void dispara_eventos(mundo_t *mundo, lef_t *lef_mundo, evento_t *evento)
 {
-  int tipo = evento->tipo;
-  switch (tipo)
+  switch (evento->tipo)
   {
   case ID_CHEGADA:
     dispara_chegada(mundo, evento, lef_mundo);
@@ -433,29 +466,22 @@ int main()
   mundo_t *mundo = cria_mundo(); /* Todos os dados do mundo */
   lef_t *lef_mundo = cria_lef(); /* Lista de eventos mundo */
   evento_t *evento;
-  srand(time(NULL));
-  /* srand(12903); */
+
+  srand(time(NULL)); /* Semente que sempre vai aleatorizar as simulações, fazendo que nenhuma seja igual a outra */
 
   cria_herois(mundo);
   cria_locais(mundo);
 
   cria_eventos_iniciais_chegada(lef_mundo);
   cria_eventos_iniciais_missao(lef_mundo);
-  cria_eventos(lef_mundo, ID_FIM, -1, -1, FIM_DO_MUNDO);
-
-  /* nodo_lef_t *aux;
-  aux = lef_mundo->Primeiro;
-  while (aux)
-  {
-    printf("EVENTO %d - HEROI: %2d | LOCAL: %d | TEMPO: %6d \n", (aux->evento->tipo), (aux->evento->dado1), (aux->evento->dado2), (aux->evento->tempo));
-    aux = aux->prox;
-  } */
+  cria_eventos(lef_mundo, ID_FIM, -1, -1, FIM_DO_MUNDO); /* Cria evento fim do mundo */
 
   while (mundo->tempo_atual < FIM_DO_MUNDO)
   {
     evento = obtem_primeiro_lef(lef_mundo);
     mundo->tempo_atual = evento->tempo;
     dispara_eventos(mundo, lef_mundo, evento);
+    free(evento);
   }
 
   /* IMPRIME AS EXPERIENCIAS DOS HEROIS NO FINAL */
@@ -465,35 +491,8 @@ int main()
     printf("HEROI %2d EXPERIENCIA %2d \n", (mundo->herois[i])->id, (mundo->herois[i])->experiencia);
   }
 
-  /*  int i;
-   for (i = 0; i <= mundo->total_herois - 1; i++)
-   {
-     printf("HEROI %d - IDADE: %d | PACIENCIA: %d | EXP: %d | HAB ", (mundo->herois[i])->id, (mundo->herois[i])->idade, (mundo->herois[i])->paciencia, (mundo->herois[i])->experiencia);
-     imprime_cjt((mundo->herois[i])->habilidades_heroi);
-   }
-
-   int j;
-   for (j = 0; j <= mundo->total_locais - 1; j++)
-   {
-     printf("LOCAL %d - LOTACAO: %d | X: %d | Y: %d \n", (mundo->locais[j])->id, (mundo->locais[j])->lotacao_max, (mundo->locais[j])->x, (mundo->locais[j])->y);
-   } */
-
-  /*  nodo_lef_t *aux;
-   aux = lef_mundo->Primeiro;
-   while (aux)
-   {
-     printf("EVENTO %d - HEROI: %2d | LOCAL: %d | TEMPO: %6d \n", (aux->evento)->tipo, (aux->evento)->dado1, (aux->evento)->dado2, (aux->evento)->tempo);
-     aux = aux->prox;
-   } */
-
-  /* Saidas que serão impressas no terminal */
-  /*
-
-
-  printf("%6d:MISSAO %2d HAB_REQ \n");
-  printf("%6d:MISSAO %2d HAB_EQL \n");
-  printf("%6d:MISSAO %2d HAB_EQS \n");
-  printf("%6d:MISSAO %2d IMPOSSIVEL \n");*/
+  lef_mundo = destroi_lef(lef_mundo);
+  mundo = destroi_mundo(mundo);
 
   return 0;
 }
