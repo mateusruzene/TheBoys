@@ -200,13 +200,15 @@ local_t *pega_local(mundo_t *mundo, int id_local)
 conjunto_t *pega_habilidades_local(mundo_t *mundo, local_t *local)
 {
   heroi_t *heroi;
-  conjunto_t *hab_herois = cria_cjt(N_HABILIDADES);
+  conjunto_t *hab_herois = cria_cjt(N_HABILIDADES), *aux;
   int i;
 
   for (i = 0; i < local->herois_local->card; i++)
   {
     heroi = pega_heroi(mundo, local->herois_local->v[i]);
+    aux = hab_herois;
     hab_herois = uniao_cjt(hab_herois, heroi->habilidades_heroi);
+    aux = destroi_cjt(aux);
   }
 
   return hab_herois;
@@ -390,7 +392,6 @@ void dispara_missao(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
   conjunto_t *missao, *hab_herois, *local_escolhido, *local_anterior;
   int i, hab_missao, id_local_escolhido;
 
-  hab_herois = cria_cjt(N_HABILIDADES);
   local_escolhido = cria_cjt(N_HABILIDADES);
   local_anterior = cria_cjt(N_HABILIDADES);
 
@@ -416,6 +417,8 @@ void dispara_missao(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
         id_local_escolhido = i;
         local_anterior = destroi_cjt(local_anterior);
       }
+
+    hab_herois = destroi_cjt(hab_herois);
   }
 
   if (vazio_cjt(local_escolhido))
@@ -433,6 +436,7 @@ void dispara_missao(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
   }
 
   hab_herois = destroi_cjt(hab_herois);
+  local_anterior = destroi_cjt(local_anterior);
   local_escolhido = destroi_cjt(local_escolhido);
   missao = destroi_cjt(missao);
 }

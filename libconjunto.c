@@ -231,6 +231,8 @@ conjunto_t *uniao_cjt(conjunto_t *c1, conjunto_t *c2)
 
     cjt->card += cjt_dif->card;
 
+    cjt_dif = destroi_cjt(cjt_dif);
+
     return cjt;
 }
 
