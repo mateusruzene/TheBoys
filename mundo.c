@@ -19,6 +19,7 @@
 #define ID_SAIDA 2
 #define ID_MISSAO 3
 #define ID_FIM 4
+#define ID_INICIO 0
 
 struct heroi
 {
@@ -155,10 +156,12 @@ void adiciona_exp_herois(mundo_t *mundo, conjunto_t *local_escolhido)
   }
 }
 
-void destroi_heroi(heroi_t *heroi)
+heroi_t *destroi_heroi(heroi_t *heroi)
 {
   heroi->habilidades_heroi = destroi_cjt(heroi->habilidades_heroi);
   free(heroi);
+
+  return heroi;
 }
 /* ------------------- FIM HEROIS ------------------- */
 
@@ -214,11 +217,17 @@ conjunto_t *pega_habilidades_local(mundo_t *mundo, local_t *local)
   return hab_herois;
 }
 
-void destroi_local(local_t *local)
+local_t *destroi_local(local_t *local)
 {
-  local->fila_espera = destroi_fila(local->fila_espera);
-  local->herois_local = destroi_cjt(local->herois_local);
+  printf("Passou aqui");
+  destroi_fila(local->fila_espera);
+  printf("Passou aquiiii");
+
+  destroi_cjt(local->herois_local);
+
   free(local);
+
+  return local;
 }
 /* ------------------- FIM LOCAIS ------------------- */
 
@@ -252,8 +261,6 @@ mundo_t *destroi_mundo(mundo_t *mundo)
   for (j = 0; j < N_LOCAIS; j++)
     destroi_local(mundo->locais[j]);
 
-  /* free(mundo->herois);
-  free(mundo->locais); */
   mundo->habilidades_mundo = destroi_cjt(mundo->habilidades_mundo);
   free(mundo);
 
@@ -309,12 +316,14 @@ void cria_eventos_iniciais_missao(lef_t *lef_mundo)
 }
 /* ------------------- FIM EVENTOS ------------------- */
 
+
 /* ------------------- FUNCOES DISPARA ------------------- */
 /* dispara os eventos de chegada e cria os de saida */
 void dispara_chegada(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
 {
   heroi_t *heroi = pega_heroi(mundo, evento->dado1);
   local_t *local = pega_local(mundo, evento->dado2);
+
   int tpl;
   int decisao = (heroi->paciencia) / 4 - tamanho_fila(local->fila_espera);
   int lotado = cardinalidade_cjt(local->herois_local);
@@ -458,6 +467,9 @@ void dispara_eventos(mundo_t *mundo, lef_t *lef_mundo, evento_t *evento)
   case ID_FIM:
     printf("%6d:FIM DO MUNDO\n", (evento->tempo));
     break;
+  case ID_INICIO:
+    printf(" %6d:INICIO MUNDO \n", (evento->tempo));
+    break;
   default:
     printf("ERRO \n");
     break;
@@ -465,20 +477,32 @@ void dispara_eventos(mundo_t *mundo, lef_t *lef_mundo, evento_t *evento)
 }
 /* ------------------- FIM FUNCOES DISPARA ------------------- */
 
+
 int main()
 {
   mundo_t *mundo = cria_mundo(); /* Todos os dados do mundo */
   lef_t *lef_mundo = cria_lef(); /* Lista de eventos mundo */
+  /* nodo_lef_t *aux; */
   evento_t *evento;
 
-  srand(time(NULL)); /* Semente que sempre vai aleatorizar as simulações, fazendo que nenhuma seja igual a outra */
-
+  /* srand(time(NULL)); */ /* Semente que sempre vai aleatorizar as simulações, fazendo que nenhuma seja igual a outra */
+  srand(121324);
   cria_herois(mundo);
   cria_locais(mundo);
 
+  cria_eventos(lef_mundo, ID_INICIO, -1, -1, 0); /* EVENTO DE INICIO DO MUNDO */
   cria_eventos_iniciais_chegada(lef_mundo);
   cria_eventos_iniciais_missao(lef_mundo);
   cria_eventos(lef_mundo, ID_FIM, -1, -1, FIM_DO_MUNDO); /* Cria evento fim do mundo */
+
+  /* aux = lef_mundo->Primeiro;
+  while (aux)
+  {
+    printf("Evento TEMPO %d \n", (aux->evento)->tempo);
+    aux = aux->prox;
+  } */
+  
+  
 
   while (mundo->tempo_atual < FIM_DO_MUNDO)
   {

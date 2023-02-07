@@ -45,8 +45,9 @@ void ordena_cjt(conjunto_t *c)
 
 conjunto_t *cria_cjt(int max)
 {
-    conjunto_t *c = malloc(sizeof *c);
-    if (!c)
+    conjunto_t *c;
+    
+    if (!(c = malloc(sizeof(conjunto_t))))
         return NULL;
 
     c->max = max;
