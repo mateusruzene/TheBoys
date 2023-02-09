@@ -219,10 +219,7 @@ conjunto_t *pega_habilidades_local(mundo_t *mundo, local_t *local)
 
 local_t *destroi_local(local_t *local)
 {
-  printf("Passou aqui");
   destroi_fila(local->fila_espera);
-  printf("Passou aquiiii");
-
   destroi_cjt(local->herois_local);
 
   free(local);
@@ -376,13 +373,11 @@ void dispara_saida(mundo_t *mundo, evento_t *evento, lef_t *lef_mundo)
   if (!(vazia_fila(local->fila_espera)))
   {
     retira_fila(local->fila_espera, &fila_primeiro_heroi);
-
     retira_cjt(local->herois_local, evento->dado1);
 
     printf("%6d:SAIDA HEROI %2d LOCAL %d (%2d/%2d), REMOVE FILA HEROI %2d\n", (evento->tempo), (evento->dado1), (evento->dado2), cardinalidade_cjt(local->herois_local), (local->lotacao_max), fila_primeiro_heroi);
 
     cria_eventos_no_inicio(lef_mundo, ID_CHEGADA, fila_primeiro_heroi, evento->dado2, mundo->tempo_atual);
-
     cria_eventos(lef_mundo, ID_CHEGADA, heroi->id, id_prox_local, novo_tempo);
   }
   else
@@ -487,13 +482,15 @@ int main()
 
   /* srand(time(NULL)); */ /* Semente que sempre vai aleatorizar as simulações, fazendo que nenhuma seja igual a outra */
   srand(121324);
+
   cria_herois(mundo);
   cria_locais(mundo);
 
   cria_eventos(lef_mundo, ID_INICIO, -1, -1, 0); /* EVENTO DE INICIO DO MUNDO */
   cria_eventos_iniciais_chegada(lef_mundo);
   cria_eventos_iniciais_missao(lef_mundo);
-  cria_eventos(lef_mundo, ID_FIM, -1, -1, FIM_DO_MUNDO); /* Cria evento fim do mundo */
+  cria_eventos(lef_mundo, ID_FIM, -1, -1, FIM_DO_MUNDO); /* EVENTO DE FIM
+   DO MUNDO */
 
   /* aux = lef_mundo->Primeiro;
   while (aux)
@@ -503,7 +500,7 @@ int main()
   } */
   
   
-
+  /* Dispara os eventos do mundo */
   while (mundo->tempo_atual < FIM_DO_MUNDO)
   {
     evento = obtem_primeiro_lef(lef_mundo);
