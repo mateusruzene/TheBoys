@@ -37,6 +37,7 @@ fila_t *destroi_fila(fila_t *f)
         aux = (f->ini);
         f->ini = f->ini->prox;
         free(aux);
+        aux = NULL;
     }
     free(f);
     f = NULL;
@@ -73,7 +74,7 @@ int insere_fila(fila_t *f, int elemento)
 
     if (vazia_fila(f))
     {
-        if (!(f->ini = malloc(sizeof(nodo_f_t))) || !(f->fim = malloc(sizeof(nodo_f_t))))
+        if (!(f->ini = malloc(sizeof(nodo_f_t))))
             return 0;
 
         (f->ini)->elem = elemento;
