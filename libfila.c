@@ -29,8 +29,11 @@ fila_t *destroi_fila(fila_t *f)
 {
     nodo_f_t *aux;
 
-    if (vazia_fila(f))
+    if (vazia_fila(f)){
+        free(f);
+        f = NULL;
         return f;
+    }
 
     while (f->ini != NULL)
     {

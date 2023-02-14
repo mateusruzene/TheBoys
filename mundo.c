@@ -261,6 +261,7 @@ mundo_t *destroi_mundo(mundo_t *mundo)
 
   mundo->habilidades_mundo = destroi_cjt(mundo->habilidades_mundo);
   free(mundo);
+  mundo = NULL;
 
   return mundo;
 }
