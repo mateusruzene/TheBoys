@@ -477,8 +477,7 @@ int main()
   lef_t *lef_mundo = cria_lef(); /* Lista de eventos mundo */
   evento_t *evento;
 
-  /* srand(time(NULL)); */ /* Semente que sempre vai aleatorizar as simulações, fazendo que nenhuma seja igual a outra */
-  srand(121324);
+  srand(time(NULL)); /* Semente que sempre vai aleatorizar as simulações, fazendo que nenhuma seja igual a outra */
 
   cria_herois(mundo);
   cria_locais(mundo);
